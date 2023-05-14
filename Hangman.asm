@@ -56,20 +56,20 @@ syscall
 .end_macro
 
 .macro get_strlen(%string)
-# Load address of string into $a0
-la $a0, %string
+	# Load address of string into $a0
+	la $a0, %string
 
-# Loop through string
-strlen_loop:
-    lb $t2, ($a0)   # Load byte from string
-    beqz $t2, save   # End loop if byte is null
-    addi $a0, $a0, 1   # Increment string pointer
-    addi $t1, $t1, 1   # Increment length
-    j strlen_loop
+	# Loop through string
+	strlen_loop:
+		lb $t2, ($a0)   # Load byte from string
+		beqz $t2, save   # End loop if byte is null
+		addi $a0, $a0, 1   # Increment string pointer
+		addi $t1, $t1, 1   # Increment length
+		j strlen_loop
 
-# Store length in length variable
-save:
-subi $t1,$t1,1
+	# Store length in length variable
+	save:
+		subi $t1,$t1,1
 
 .end_macro 
 
