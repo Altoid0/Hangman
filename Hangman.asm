@@ -61,8 +61,8 @@ la $a0, %string
 
 # Loop through string
 strlen_loop:
-    lb $t0, ($a0)   # Load byte from string
-    beqz $t0, save   # End loop if byte is null
+    lb $t2, ($a0)   # Load byte from string
+    beqz $t2, save   # End loop if byte is null
     addi $a0, $a0, 1   # Increment string pointer
     addi $t1, $t1, 1   # Increment length
     j strlen_loop
@@ -171,12 +171,10 @@ main:
 		beq $t0,3,easy_guesses
 		
 		hard_guesses:
-			# Load length into $t2
-			move $t2, $t1
-			
+
 			# Multiply integer by 1.5
 			li $t3, 3           # Load 3 into $t3
-			mult $t2, $t3       # Multiply by 3
+			mult $t1, $t3       # Multiply by 3
 			mflo $t3            # Store the lower 32 bits of the result in $t3		
 			div $t3, $t3, 2	    # Divide the number by 2
 
@@ -195,12 +193,10 @@ main:
 			j check_word
 			
 		med_guesses:
-			# Load length into $t2
-			move $t2, $t1
-			
+
 			# Multiply integer by 2
 			li $t3, 2           # Load 2 into $t3
-			mult $t2, $t3       # Multiply by 2
+			mult $t1, $t3       # Multiply by 2
 			mflo $t3            # Store the lower 32 bits of the result in $t3	
 			
 			# Store result in variable
@@ -217,12 +213,10 @@ main:
 			j check_word
 			
 		easy_guesses:
-			# Load length into $t2
-			move $t2, $t1
-			
+
 			# Multiply integer by 2.5
 			li $t3, 5           # Load 5 into $t3
-			mult $t2, $t3       # Multiply by 5
+			mult $t1, $t3       # Multiply by 5
 			mflo $t3            # Store the lower 32 bits of the result in $t3		
 			div $t3, $t3, 2	    # Divide the number by 2
 
