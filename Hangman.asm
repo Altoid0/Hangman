@@ -75,6 +75,9 @@ subi $t1,$t1,1
 
 
 .macro eval_guess()
+	# Load the address of secret_word into $s0 and guess_word into $s1
+	la $s0, secret_word
+	la $s1, guess_word
 	# Load the user's guessed char into $t7
 	la $s2, guess_char 
 	lb $t7, 0($s2)
@@ -107,14 +110,19 @@ subi $t1,$t1,1
 
 
 .macro init_guess_word()
+	# load the address of guess_word into $s1
+	la $s1, guess_word
+	# load the underscore char into $t8
 	la $s3, underscore_char
 	lb $t8, 0($s3)
+	# initialize the loop counter to 0
 	move $t9, $zero
 	guess_word_loop:
-		sb $t8, 0($s3)
+		# store the underscore char into the guess_word buffer
+		sb $t8, 0($s1)
 		addi $t9, $t9, 1
 		beq $t9, $t1, guess_word_loop_end
-		addi $s3, $s3, 1
+		addi $s1, $s1, 1
 		j guess_word_loop
 	guess_word_loop_end:
 .end_macro
@@ -154,9 +162,6 @@ main:
 		la $a0, ($t1)
 		syscall
 
-		# Initialize guess_word to underscores
-		init_guess_word()
-		
 		beq $t0,1,hard_guesses
 		beq $t0,2,med_guesses
 		beq $t0,3,easy_guesses
@@ -178,9 +183,9 @@ main:
 			lw $a0, guesses
 			li $v0, 1
 			syscall
-			# Initialize loop counter
-			la $s0, secret_word
-			la $s1, guess_word
+
+			# Initialize guess_word to underscores
+			init_guess_word()
 			move $t4, $zero
 			move $t5, $zero
 			j check_word
@@ -200,10 +205,9 @@ main:
 			print_user_string("\nDEBUG: number of hard medium guesses: ")
 			lw $a0, guesses
 			li $v0, 1
-			syscall
-			# Initialize loop counter
-			la $s0, secret_word
-			la $s1, guess_word
+
+			# Initialize guess_word to underscores
+			init_guess_word()
 			move $t4, $zero
 			move $t5, $zero
 			j check_word
@@ -225,9 +229,9 @@ main:
 			lw $a0, guesses
 			li $v0, 1
 			syscall
-			# Initialize loop counter and secret word array
-			la $s0, secret_word
-			la $s1, guess_word
+
+			# Initialize guess_word to underscores
+			init_guess_word()
 			move $t4, $zero
 			move $t5, $zero
 			j check_word
