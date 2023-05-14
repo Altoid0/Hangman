@@ -270,13 +270,18 @@ main:
 		la $s4, secret_word
     	la $s5, guess_word
 
+
+		move $t0, $zero
+
 		loop:
 			lb $s6, ($s4)      # Load byte from str1
 			lb $s7, ($s5)      # Load byte from str2
-			beqz $s6, check_word_end     # If end of str1 is reached, go to check
+			# beqz $s6, check_word_end     # If end of str1 is reached, go to check
 			bne $s6, $s7, not_equal    # If characters are not equal, go to not_equal
 			addiu $s4, $s4, 1   # Increment str1 pointer
 			addiu $s5, $s5, 1   # Increment str2 pointer
+			addi $t0, $t0, 1  # Increment counter
+			beq $t0, $t1, equal     # If we were able to iterate through the entire string, go to equal
 			j loop              # Continue loop
 		check_word_end:
     		beqz $s7, equal     # If end of str2 is reached, go to equal
