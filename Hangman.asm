@@ -125,7 +125,7 @@ subi $t1,$t1,1
 		addi $s1, $s1, 1
 		j guess_word_loop
 	guess_word_loop_end:
-	# DEBUG
+	print_user_string("\nDEBUG: Guess word initialized: ")
 	li $v0, 4
 	la $a0, guess_word
 	syscall
