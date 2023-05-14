@@ -47,13 +47,15 @@ guess_char: 		.space 2
 guesses:			.word 0
 
 .macro print_user_string(%strings)
+# Take a string from the user and print it
+
 .data
-user_string: .asciiz %strings
+	user_string: .asciiz %strings
 
 .text
-li $v0, 4
-la $a0, user_string
-syscall
+	li $v0, 4
+	la $a0, user_string
+	syscall
 .end_macro
 
 .macro get_int_input(%reg)
@@ -63,6 +65,8 @@ syscall
 .end_macro
 
 .macro get_strlen(%string)
+	# Get the length of a string and store it in $t1
+
 	# Load address of string into $a0
 	la $a0, %string
 
@@ -74,7 +78,7 @@ syscall
 		addi $t1, $t1, 1   # Increment length
 		j strlen_loop
 
-	# Store length in length variable
+	# Store length in $t1
 	save:
 		subi $t1,$t1,1
 
@@ -82,21 +86,26 @@ syscall
 
 
 .macro eval_guess()
+	# Determine if the user's guess is in the secret word
+	# 	- If it is, store the char in the guess_word buffer in the correct spot
+
+	# initialize the loop counter to 0
+	move $t5, $zero
+
 	# Load the address of secret_word into $s0 and guess_word into $s1
 	la $s0, secret_word
 	la $s1, guess_word
 	# Load the user's guessed char into $t7
 	la $s2, guess_char
 	lb $t7, 0($s2)
-	# S0: secret_word
-	# s1: guess_word
+
 	secret_word_loop:
 		# Load char from secret_word
 		lb $t6, ($s0)
-		print_user_string("\nDEBUG: Address of secret_word: ")
-		li $v0, 1
-		move $a0, $s0
-		syscall
+		# print_user_string("\nDEBUG: Address of secret_word: ")
+		# li $v0, 1
+		# move $a0, $s0
+		# syscall
 		
 		# if guess_char equals secret_word char jump to store_char
 		beq $t6, $t7, store_char
@@ -104,11 +113,11 @@ syscall
 
 		store_char:
 			# Store the byte from $t8 (guess_char) into the buffer for guess_word
-			print_user_string("\nDEBUG: User char is equal, storing char")
-			print_user_string("\nDEBUG: Address of guess_word: ")
-			li $v0, 1
-			move $a0, $s1
-			syscall
+			# print_user_string("\nDEBUG: User char is equal, storing char")
+			# print_user_string("\nDEBUG: Address of guess_word: ")
+			# li $v0, 1
+			# move $a0, $s1
+			# syscall
 
 			sb $t7, ($s1)
 		
@@ -116,7 +125,7 @@ syscall
 		eval_guess_continue:
 		addi $s0, $s0, 1	# increment secret_word pointer
 		addi $s1, $s1, 1	# increment guess_word pointer in parallel
-		print_user_string("\nDEBUG: incremented pointers")
+		# print_user_string("\nDEBUG: incremented pointers")
 		addi $t5, $t5, 1	# increment loop counter
 		
 		beq $t5, $t1, secret_word_loop_end
@@ -254,7 +263,6 @@ main:
 		# 	if equal set the corresponding letter in the guess_word to the user entered one
 		# check the enture words to see if they re equal
 	check_word:
-		move $t5, $zero
 
 		print_user_string("\nGuess a letter: ")
 		li $v0, 8
@@ -273,32 +281,55 @@ main:
 
 		move $t0, $zero
 
+
+		print_user_string("\nYour current progress:\n")
+		li $v0, 4
+		la $a0, guess_word
+		syscall
+		
 		loop:
 			lb $s6, ($s4)      # Load byte from str1
 			lb $s7, ($s5)      # Load byte from str2
-			# beqz $s6, check_word_end     # If end of str1 is reached, go to check
 			bne $s6, $s7, not_equal    # If characters are not equal, go to not_equal
+
 			addiu $s4, $s4, 1   # Increment str1 pointer
 			addiu $s5, $s5, 1   # Increment str2 pointer
 			addi $t0, $t0, 1  # Increment counter
-			beq $t0, $t1, equal     # If we were able to iterate through the entire string, go to equal
+
+			beq $t0, $t1, win     # If we were able to iterate through the entire string, go to equal
+
 			j loop              # Continue loop
-		check_word_end:
-    		beqz $s7, equal     # If end of str2 is reached, go to equal
-    		j not_equal         # Strings have different lengths
-		equal:
+		# check_word_end:
+    	# 	beqz $s7, equal     # If end of str2 is reached, go to equal
+    	# 	j not_equal         # Strings have different lengths
+		win:
 			# User guessed the word
-			print_user_string("\nYou won!")
-			# jump to exit
+			print_user_string("\nCongratulations You won!")
 			j exit
+		# equal:
+		# 	# User guessed a letter correctly
+		# 	print_user_string("\nYou guessed a letter correctly!\n")
+		# 	li $v0, 4
+		# 	la $a0, guess_word
+		# 	syscall
+		# 	j loop_continue
 		not_equal:
 			# User did not guess the word and is out of guesses jump to lose
 			beq $t4, $t3, lose
+			move $t2, $zero
+			print_user_string("\nGuesses left: ")
+			sub $t2, $t3, $t4
+			li $v0, 1
+			la $a0, ($t2)
+			syscall
 			# else jump back to check_word
 			j check_word
 
 	lose:
-		print_user_string("\nSorry you lost! Hangman was hung.")
+		print_user_string("\nSorry you lost. The Hangman was hung.\nThe secret word was: ")
+		li $v0, 4
+		la $a0, secret_word
+		syscall
 
 exit:
     li $v0, 10          # Exit program
