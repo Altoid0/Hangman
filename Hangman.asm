@@ -11,15 +11,22 @@
 # $s0: secret_word
 # $s1: guess_word
 # $s2: guess_char
+# $s3: underscore_char
+# $s4: secret_word - check_word
+# $s5: guess_word - check_word
+# $s6: loaded byte from secret_word in check_word
+# $s7: loaded byte from guess_word in check_word
+
 # $t0: difficulty
 # $t1: length
-# $t2: length (diplicate)
+# $t2: loaded byte for strlen
 # $t3: guesses
 # $t4: loop counter for guesses
 # $t5: loop counter for secret_word
 # $t6: secret_word char
 # $t7: guess_char
 # $t8: guess
+# $t9: loop counter for guess_word
 
 
 
