@@ -43,7 +43,7 @@ win_message: 		.asciiz "\nCongratulations, You win!"
 underscore_char: 	.asciiz "_"
 secret_word: 		.space 20
 guess_word:			.space 20
-guess_char: 		.space 1
+guess_char: 		.space 2
 guesses:			.word 0
 
 .macro print_user_string(%strings)
@@ -86,33 +86,43 @@ syscall
 	la $s0, secret_word
 	la $s1, guess_word
 	# Load the user's guessed char into $t7
-	la $s2, guess_char 
+	la $s2, guess_char
 	lb $t7, 0($s2)
 	# S0: secret_word
 	# s1: guess_word
 	secret_word_loop:
 		# Load char from secret_word
 		lb $t6, ($s0)
+		print_user_string("\nDEBUG: Address of secret_word: ")
+		li $v0, 1
+		move $a0, $s0
+		syscall
 		
 		# if guess_char equals secret_word char jump to store_char
 		beq $t6, $t7, store_char
+		j eval_guess_continue
+
+		store_char:
+			# Store the byte from $t8 (guess_char) into the buffer for guess_word
+			print_user_string("\nDEBUG: User char is equal, storing char")
+			print_user_string("\nDEBUG: Address of guess_word: ")
+			li $v0, 1
+			move $a0, $s1
+			syscall
+
+			sb $t7, ($s1)
 		
 		# continue with loop after either storing char or not
 		eval_guess_continue:
 		addi $s0, $s0, 1	# increment secret_word pointer
 		addi $s1, $s1, 1	# increment guess_word pointer in parallel
+		print_user_string("\nDEBUG: incremented pointers")
 		addi $t5, $t5, 1	# increment loop counter
 		
 		beq $t5, $t1, secret_word_loop_end
 		j secret_word_loop
-	
-	store_char:
-		# Store the byte from $t8 (guess_char) into the buffer for guess_word
-		sb $t7, 0($s1)
-		j eval_guess_continue
 		
 	secret_word_loop_end:
-	# Do nothing, just here to skip past store_char
 .end_macro
 
 
@@ -196,7 +206,6 @@ main:
 			# Initialize guess_word to underscores
 			init_guess_word()
 			move $t4, $zero
-			move $t5, $zero
 			j check_word
 			
 		med_guesses:
@@ -216,7 +225,6 @@ main:
 			# Initialize guess_word to underscores
 			init_guess_word()
 			move $t4, $zero
-			move $t5, $zero
 			j check_word
 			
 		easy_guesses:
@@ -238,7 +246,6 @@ main:
 			# Initialize guess_word to underscores
 			init_guess_word()
 			move $t4, $zero
-			move $t5, $zero
 			j check_word
 
 		# loop through $t3 number of times (only issue is printing out limbs, how does that work with dynamic tries)
@@ -247,11 +254,12 @@ main:
 		# 	if equal set the corresponding letter in the guess_word to the user entered one
 		# check the enture words to see if they re equal
 	check_word:
-	
+		move $t5, $zero
+
 		print_user_string("\nGuess a letter: ")
 		li $v0, 8
 		la $a0, guess_char
-		li $a1, 1
+		li $a1, 2
 		syscall
 		
 		eval_guess()
