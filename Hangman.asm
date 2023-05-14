@@ -60,12 +60,12 @@ syscall
 la $a0, %string
 
 # Loop through string
-loop:
+strlen_loop:
     lb $t0, ($a0)   # Load byte from string
     beqz $t0, save   # End loop if byte is null
     addi $a0, $a0, 1   # Increment string pointer
     addi $t1, $t1, 1   # Increment length
-    j loop
+    j strlen_loop
 
 # Store length in length variable
 save:
@@ -125,6 +125,10 @@ subi $t1,$t1,1
 		addi $s1, $s1, 1
 		j guess_word_loop
 	guess_word_loop_end:
+	# DEBUG
+	li $v0, 4
+	la $a0, guess_word
+	syscall
 .end_macro
 
 .text
@@ -249,15 +253,39 @@ main:
 		li $a1, 1
 		syscall
 		
-		evaluate_guess()
-			
-		beq # if the two strings are equal then branch to win
+		eval_guess()
+		
 		addi $t4, $t4, 1
-		beq $t4, $t3, lose
-		j check_word
+
+		# Check if the guess_word is the same as the secret_word
+		la $s4, secret_word
+    	la $s5, guess_word
+
+		loop:
+			lb $s6, ($s4)      # Load byte from str1
+			lb $s7, ($s5)      # Load byte from str2
+			beqz $s6, check_word_end     # If end of str1 is reached, go to check
+			bne $s6, $s7, not_equal    # If characters are not equal, go to not_equal
+			addiu $s4, $s4, 1   # Increment str1 pointer
+			addiu $s5, $s5, 1   # Increment str2 pointer
+			j loop              # Continue loop
+		check_word_end:
+    		beqz $s7, equal     # If end of str2 is reached, go to equal
+    		j not_equal         # Strings have different lengths
+		equal:
+			# User guessed the word
+			print_user_string("\nYou won!")
+			# jump to exit
+			j exit
+		not_equal:
+			# User did not guess the word and is out of guesses jump to lose
+			beq $t4, $t3, lose
+			# else jump back to check_word
+			j check_word
+
 	lose:
 		print_user_string("\nSorry you lost! Hangman was hung.")
-		
-		
-		
-		
+
+exit:
+    li $v0, 10          # Exit program
+    syscall
