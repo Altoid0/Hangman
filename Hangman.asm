@@ -7,20 +7,33 @@
 # - Store that word and have a 2nd user try and guess it
 # - For every incorrect letter guess add a body part to the hangman
 # - For ever correct letter guess print the letter in the correct spot
+# List of registers
+# $s0: secret_word
+# $s1: guess_word
+# $s2: guess_char
+# $t0: difficulty
+# $t1: length
+# $t2: length (diplicate)
+# $t3: guesses
+# $t4: loop counter for guesses
+# $t5: loop counter for secret_word
+
+
 
 .data
-menu:			.asciiz "\nWelcome to the Byte Dynasty Hangman game\nPlease enter the difficulty at which you want to play\nThen please have a friend enter a word for you to guess"
-difficulty:		.asciiz "\n\nPlease enter the difficulty 1 (hardest) to 3 (easiest) you wish to play at: "
+menu:				.asciiz "\nWelcome to the Byte Dynasty Hangman game\nPlease enter the difficulty at which you want to play\nThen please have a friend enter a word for you to guess"
+difficulty:			.asciiz "\n\nPlease enter the difficulty 1 (hardest) to 3 (easiest) you wish to play at: "
 inval_diff: 		.asciiz "\n Sorry the difficulty entered was not valid, please try again"
 word_message: 		.asciiz "\nYour word?: "
-clear:			.asciiz "\n\n\n\n\n\n\n\n\n"
+clear:				.asciiz "\n\n\n\n\n\n\n\n\n"
 incorrect_guess:	.asciiz "\nSorry that's not a letter in the word"
 guess_mesage:		.asciiz "\nGuess a letter: "
 lose_message:		.asciiz "\nSorry you lost, the word was: "
 win_message: 		.asciiz "\nCongratulations, You win!"
 secret_word: 		.space 20
-guesses:		.word 0
-
+guess_word:			.space 20
+guess_char: 		.space 1
+guesses:			.word 0
 
 .macro print_user_string(%strings)
 .data
@@ -56,6 +69,39 @@ subi $t1,$t1,1
 
 .end_macro 
 
+
+.macro eval_guess()
+	# Load the user's guessed char into $t8
+	la $s2, guess_char 
+	lb $t8, 0($s2)
+	# S0: secret_word
+	# s1: guess_word
+	secret_word_loop:
+		# Load char from secret_word
+		lb $t6, ($s0)
+		# Load char from guess_word (should not be needed)
+		#lb $t7, ($s1)
+		
+		# if guess_char equals secret_word char jump to store_char
+		beq $t6, $t8, store_char
+		
+		# continue with loop after either storing char or not
+		eval_guess_continue:
+		addi $s0, $s0, 1	# increment secret_word pointer
+		addi $s1, $s1, 1	# increment guess_word pointer in parallel
+		addi $t5, $t5, 1	# increment loop counter
+		
+		beq $t5, $t1, secret_word_loop_done
+		j secret_word_loop
+	
+	store_char:
+		# Store the byte from $t8 (guess_char) into the buffer for guess_word
+		sb $t8, 0($s1)
+		j eval_guess_continue
+		
+	secret_word_loop_done:
+	# Do nothing, just here to skip past store_char
+.end_macro
 
 
 .text
@@ -114,6 +160,11 @@ main:
 			lw $a0, guesses
 			li $v0, 1
 			syscall
+			# Initialize loop counter
+			la $s0, secret_word
+			la $s1, guess_word
+			move $t4, $zero
+			move $t5, $zero
 			j check_word
 			
 		med_guesses:
@@ -132,6 +183,11 @@ main:
 			lw $a0, guesses
 			li $v0, 1
 			syscall
+			# Initialize loop counter
+			la $s0, secret_word
+			la $s1, guess_word
+			move $t4, $zero
+			move $t5, $zero
 			j check_word
 			
 		easy_guesses:
@@ -151,7 +207,35 @@ main:
 			lw $a0, guesses
 			li $v0, 1
 			syscall
+			# Initialize loop counter and secret word array
+			la $s0, secret_word
+			la $s1, guess_word
+			move $t4, $zero
+			move $t5, $zero
 			j check_word
 
+		# loop through $t3 number of times (only issue is printing out limbs, how does that work with dynamic tries)
+		#	get user letter input
+		#	loop through secret_word streing_len number of times
+		# 	if equal set the corresponding letter in the guess_word to the user entered one
+		# check the enture words to see if they re equal
 	check_word:
+	
+		print_user_string("\nGuess a letter: ")
+		li $v0, 8
+		la $a0, guess_char
+		li $a1, 1
+		syscall
+		
+		evaluate_guess()
+			
+		addi $t4, $t4, 1
+		beq $t4, $t3, lose
+		beq # if the two strings are equal then branch to win
+		j check_word
+	lose:
+		print_user_string("\nSorry you lost! Hangman was hung.")
+		
+		
+		
 		
