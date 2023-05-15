@@ -317,9 +317,7 @@ main:
 			beq $t0, $t1, win     # If we were able to iterate through the entire string, go to equal
 
 			j loop              # Continue loop
-		# check_word_end:
-    	# 	beqz $s7, equal     # If end of str2 is reached, go to equal
-    	# 	j not_equal         # Strings have different lengths
+
 		win:
 			# User guessed the word
 			print_user_string("\nCongratulations You won!")
@@ -327,13 +325,7 @@ main:
 			la $a0, win_ascii
 			syscall
 			j exit
-		# equal:
-		# 	# User guessed a letter correctly
-		# 	print_user_string("\nYou guessed a letter correctly!\n")
-		# 	li $v0, 4
-		# 	la $a0, guess_word
-		# 	syscall
-		# 	j loop_continue
+			
 		not_equal:
 			# User did not guess the word and is out of guesses jump to lose
 			beq $t4, $t3, lose
