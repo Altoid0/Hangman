@@ -31,20 +31,23 @@
 
 
 .data
-menu:				.asciiz "\nWelcome to the Byte Dynasty Hangman game\nPlease enter the difficulty at which you want to play\nThen please have a friend enter a word for you to guess"
-difficulty:			.asciiz "\n\nPlease enter the difficulty 1 (hardest) to 3 (easiest) you wish to play at: "
-inval_diff: 		.asciiz "\n Sorry the difficulty entered was not valid, please try again"
-word_message: 		.asciiz "\nYour word?: "
-clear:				.asciiz "\n\n\n\n\n\n\n\n\n"
-incorrect_guess:	.asciiz "\nSorry that's not a letter in the word"
-guess_mesage:		.asciiz "\nGuess a letter: "
-lose_message:		.asciiz "\nSorry you lost, the word was: "
-win_message: 		.asciiz "\nCongratulations, You win!"
+# menu:				.asciiz "\nWelcome to the Byte Dynasty Hangman game\nPlease enter the difficulty at which you want to play\nThen please have a friend enter a word for you to guess"
+# difficulty:			.asciiz "\n\nPlease enter the difficulty 1 (hardest) to 3 (easiest) you wish to play at: "
+# inval_diff: 		.asciiz "\n Sorry the difficulty entered was not valid, please try again"
+# word_message: 		.asciiz "\nYour word?: "
+# clear:				.asciiz "\n\n\n\n\n\n\n\n\n"
+# incorrect_guess:	.asciiz "\nSorry that's not a letter in the word"
+# guess_mesage:		.asciiz "\nGuess a letter: "
+# lose_message:		.asciiz "\nSorry you lost, the word was: "
+# win_message: 		.asciiz "\nCongratulations, You win!"
+
 underscore_char: 	.asciiz "_"
 secret_word: 		.space 20
 guess_word:			.space 20
 guess_char: 		.space 2
 guesses:			.word 0
+hangman_ascii:		.asciiz "\n  _    _                                         \n | |  | |                                        \n | |__| | __ _ _ __   __ _ _ __ ___   __ _ _ __  \n |  __  |/ _` | '_ \ / _` | '_ ` _ \ / _` | '_ \ \n | |  | | (_| | | | | (_| | | | | | | (_| | | | |\n |_|  |_|\__,_|_| |_|\__, |_| |_| |_|\__,_|_| |_|\n                      __/ |                      \n                     |___/                       "
+win_ascii:			.asciiz "\n __     __          __          ___       _ _     \n \ \   / /          \ \        / (_)     (_) |    \n  \ \_/ /__  _   _   \ \  /\  / / _ _ __  _| | ___\n   \   / _ \| | | |   \ \/  \/ / | | '_ \| | |/ _ \ \n    | | (_) | |_| |    \  /\  /  | | | | | | |  __/\n    |_|\___/ \__,_|     \/  \/   |_|_| |_|_|_|\___|\n                                                    "
 
 .macro print_user_string(%strings)
 # Take a string from the user and print it
@@ -151,7 +154,15 @@ guesses:			.word 0
 		addi $s1, $s1, 1
 		j guess_word_loop
 	guess_word_loop_end:
-	print_user_string("\nDEBUG: Guess word initialized: ")
+	print_user_string("\nGuess the " )
+	li $v0, 1
+	move $a0, $t1
+	syscall
+	print_user_string(" character word within ")
+	li $v0, 1
+	move $a0, $t3
+	syscall
+	print_user_string(" guesses: \n")
 	li $v0, 4
 	la $a0, guess_word
 	syscall
@@ -159,6 +170,9 @@ guesses:			.word 0
 
 .text
 main:
+	li $v0, 4
+	la $a0, hangman_ascii
+	syscall
 	print_user_string("\nWelcome to the Byte Dynasty Hangman game\nPlease enter the difficulty at which you want to play\nThen please have a friend enter a word for you to guess")
 	select_difficulty:
 		print_user_string("\n\nPlease enter the difficulty 1 (hardest) to 3 (easiest) you wish to play at: ")
@@ -185,12 +199,14 @@ main:
 		la $a0, secret_word
 		li $a1, 20
 		syscall
+
+		print_user_string("\n\n\n\n\n\n\n")
 		
 		get_strlen(secret_word)
-		print_user_string("\nDEBUG: String Length: ")
-		li $v0, 1
-		la $a0, ($t1)
-		syscall
+		# print_user_string("\nDEBUG: String Length: ")
+		# li $v0, 1
+		# la $a0, ($t1)
+		# syscall
 
 		beq $t0,1,hard_guesses
 		beq $t0,2,med_guesses
@@ -207,10 +223,10 @@ main:
 			# Store result in variable
 			sw $t3, guesses
 			
-			print_user_string("\nDEBUG: number of hard guesses: ")
-			lw $a0, guesses
-			li $v0, 1
-			syscall
+			# print_user_string("\nDEBUG: number of hard guesses: ")
+			# lw $a0, guesses
+			# li $v0, 1
+			# syscall
 
 			# Initialize guess_word to underscores
 			init_guess_word()
@@ -227,9 +243,11 @@ main:
 			# Store result in variable
 			sw $t3, guesses
 			
-			print_user_string("\nDEBUG: number of hard medium guesses: ")
-			lw $a0, guesses
-			li $v0, 1
+			# print_user_string("\nDEBUG: number of hard medium guesses: ")
+			# lw $a0, guesses
+			# li $v0, 1
+			# syscall
+
 
 			# Initialize guess_word to underscores
 			init_guess_word()
@@ -247,10 +265,10 @@ main:
 			# Store result in variable
 			sw $t3, guesses
 			
-			print_user_string("\nDEBUG: number of easy guesses: ")
-			lw $a0, guesses
-			li $v0, 1
-			syscall
+			# # print_user_string("\nDEBUG: number of easy guesses: ")
+			# lw $a0, guesses
+			# li $v0, 1
+			# syscall
 
 			# Initialize guess_word to underscores
 			init_guess_word()
@@ -264,7 +282,7 @@ main:
 		# check the enture words to see if they re equal
 	check_word:
 
-		print_user_string("\nGuess a letter: ")
+		print_user_string("\n\nGuess a letter: ")
 		li $v0, 8
 		la $a0, guess_char
 		li $a1, 2
@@ -282,7 +300,7 @@ main:
 		move $t0, $zero
 
 
-		print_user_string("\nYour current progress:\n")
+		print_user_string("\n\nYour current progress:\n")
 		li $v0, 4
 		la $a0, guess_word
 		syscall
@@ -305,6 +323,9 @@ main:
 		win:
 			# User guessed the word
 			print_user_string("\nCongratulations You won!")
+			li $v0, 4
+			la $a0, win_ascii
+			syscall
 			j exit
 		# equal:
 		# 	# User guessed a letter correctly
